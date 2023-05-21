@@ -26,34 +26,12 @@ if ( ! class_exists( 'Event_API' ) ) {
 		 */
 		public function __construct() {
 			add_action( 'rest_api_init', array( $this, 'register_routes' ) );
-			// add_filter( 'rest_authentication_errors', array( $this, 'authenticate_api_request' ) );
 		}
 
 		/**
 		 * Register the routes for the objects of the controller.
 		 */
 		public function register_routes() {
-			// register_rest_route(
-			// 	$this->namespace,
-			// 	'/' . $this->route_base . 'show/id=(?P<id>[\d]+)',
-			// 	array(
-			// 		array(
-			// 			'methods'             => WP_REST_Server::READABLE,
-			// 			'callback'            => array( $this, 'get_items' ),
-			// 			'permission_callback' => array( $this, 'get_items_permissions_check' ),
-			// 			'args'                => array(
-
-			// 			),
-			// 		),
-			// 		array(
-			// 			'methods'             => WP_REST_Server::CREATABLE,
-			// 			'callback'            => array( $this, 'create_item' ),
-			// 			'permission_callback' => array( $this, 'create_item_permissions_check' ),
-			// 			'args'                => $this->get_endpoint_args_for_item_schema( true ),
-			// 		),
-			// 	)
-			// );
-
 			register_rest_route(
 				$this->namespace,
 				'/' . $this->route_base . '/show',
@@ -74,22 +52,6 @@ if ( ! class_exists( 'Event_API' ) ) {
 							),
 						),
 					),
-					// array(
-					// 	'methods'             => WP_REST_Server::EDITABLE,
-					// 	'callback'            => array( $this, 'update_item' ),
-					// 	'permission_callback' => array( $this, 'update_item_permissions_check' ),
-					// 	'args'                => $this->get_endpoint_args_for_item_schema( false ),
-					// ),
-					// array(
-					// 	'methods'             => WP_REST_Server::DELETABLE,
-					// 	'callback'            => array( $this, 'delete_item' ),
-					// 	'permission_callback' => array( $this, 'delete_item_permissions_check' ),
-					// 	'args'                => array(
-					// 	'force' => array(
-					// 		'default' => false,
-					// 	),
-					// 	),
-					// ),
 				),
 			);
 
@@ -167,23 +129,6 @@ if ( ! class_exists( 'Event_API' ) ) {
 		}
 
 		/**
-		 * Get a collection of items
-		 *
-		 * @param WP_REST_Request $request Full data about the request.
-		 * @return WP_Error|WP_REST_Response
-		 */
-		public function get_items( $request ) {
-			$items = array(); //do a query, call another class, etc
-			$data = array();
-			foreach ( $items as $item ) {
-				$itemdata = $this->prepare_item_for_response( $item, $request );
-				$data[]   = $this->prepare_response_for_collection( $itemdata );
-			}
-
-			return new \WP_REST_Response( $data, 200 );
-		}
-
-		/**
 		 * Get one Event item.
 		 *
 		 * @param WP_REST_Request $request Full data about the request.
@@ -192,14 +137,11 @@ if ( ! class_exists( 'Event_API' ) ) {
 		public function get_item( $request ) {
 			$response = array();
 			$post_id  = $request->get_param( 'id' );
-
-			$args = array(
+			$args     = array(
 				'post_type' => 'event',
 				'post__in'  => array( $post_id ),
 			);
-			$posts = get_posts( $args );
-
-			error_log( var_export( $posts, true) );
+			$posts    = get_posts( $args );
 
 			if ( ! empty( $posts ) ) {
 				foreach ( $posts as $post ) {
@@ -209,7 +151,7 @@ if ( ! class_exists( 'Event_API' ) ) {
 						$post->ID,
 						'event_category',
 					);
-					$categories = array();
+					$categories      = array();
 
 					foreach ( $terms as $term ) {
 						$categories[] = $term->slug;
@@ -249,11 +191,10 @@ if ( ! class_exists( 'Event_API' ) ) {
 		public function get_items_by_date( $request ) {
 			$response   = array();
 			$start_date = $request->get_param( 'start_date' );
-
-			$args = array(
-				'post_type'   => 'event',
-				'post_status' => 'publish',
-				'meta_query'  => array(
+			$args       = array(
+				'post_type'      => 'event',
+				'post_status'    => 'publish',
+				'meta_query'     => array(
 					array(
 						'key'     => 'start_date_time',
 						'value'   => $start_date,
@@ -262,7 +203,7 @@ if ( ! class_exists( 'Event_API' ) ) {
 				),
 				'posts_per_page' => -1, // Retrieve all matching posts.
 			);
-			$posts = get_posts( $args );
+			$posts      = get_posts( $args );
 
 			if ( ! empty( $posts ) ) {
 				foreach ( $posts as $post ) {
@@ -272,7 +213,7 @@ if ( ! class_exists( 'Event_API' ) ) {
 						$post->ID,
 						'event_category',
 					);
-					$categories = array();
+					$categories      = array();
 
 					foreach ( $terms as $term ) {
 						$categories[] = $term->slug;
@@ -310,15 +251,6 @@ if ( ! class_exists( 'Event_API' ) ) {
 		 * @return WP_Error|WP_REST_Response Return WP_REST_Response on success, WP_Error otherwise.
 		 */
 		public function create_item( $request ) {
-			// $item = $this->prepare_item_for_database( $request );
-	
-			// if ( function_exists( 'slug_some_function_to_create_item' ) ) {
-			// 	$data = slug_some_function_to_create_item( $item );
-			// 	if ( is_array( $data ) ) {
-			// 		return new \WP_REST_Response( $data, 200 );
-			// 	}
-			// }
-
 			$response        = array();
 			$title           = $request->get_param( 'title' );
 			$start_date_time = $request->get_param( 'start_date_time' );
@@ -353,24 +285,8 @@ if ( ! class_exists( 'Event_API' ) ) {
 			);
 
 			return new \WP_REST_Response( $response, 200 );
-
-			// Adding extra custom meta to the created medicjne post
-			// add_post_meta( $post_id, 'med_type', $this->get_default_data( $request, 'med_type' ) );
-			// add_post_meta( $post_id, 'med_expiry', $this->get_default_data( $request, 'med_expiry' ) );
-			// add_post_meta( $post_id, 'price', $this->get_default_data( $request, 'price' ) );
-			// add_post_meta( $post_id, 'med_mfg_company', $this->get_default_data( $request, 'med_mfg_company' ) );
-			
-			// /**
-			//  * Filter the API response data by third party
-			//  * 
-			//  * @param object $response responce data generated by API callback.
-			//  * @param object $request API request data.
-			//  */
-			// return apply_filters('med_create_post_response', rest_ensure_response( $response ), $request);
-	
-			// return new \WP_Error( 'cant-create', __( 'message', 'text-domain' ), array( 'status' => 500 ) );
 		}
-	
+
 		/**
 		 * Update one Event item.
 		 *
@@ -378,15 +294,6 @@ if ( ! class_exists( 'Event_API' ) ) {
 		 * @return WP_Error|WP_REST_Response Return WP_Rest_Response on success, WP_Error otherwise.
 		 */
 		public function update_item( $request ) {
-			// $item = $this->prepare_item_for_database( $request );
-
-			// if ( function_exists( 'slug_some_function_to_update_item' ) ) {
-			// 	$data = slug_some_function_to_update_item( $item );
-			// 	if ( is_array( $data ) ) {
-			// 		return new WP_REST_Response( $data, 200 );
-			// 	}
-			// }
-
 			$response = array();
 			$postarr  = array();
 
@@ -416,6 +323,7 @@ if ( ! class_exists( 'Event_API' ) ) {
 				$postarr['ID']        = $request->get_param( 'ID' );
 				$postarr['post_type'] = 'event';
 
+				// Update if post id exists, create post otherwise.
 				$post_id = wp_insert_post(
 					$postarr,
 					true
@@ -442,15 +350,6 @@ if ( ! class_exists( 'Event_API' ) ) {
 		 * @return WP_Error|WP_REST_Response Return WP_Rest_Response on success, WP_Error otherwise.
 		 */
 		public function delete_item( $request ) {
-			// $item = $this->prepare_item_for_database( $request );
-	
-			// if ( function_exists( 'slug_some_function_to_delete_item' ) ) {
-			// 	$deleted = slug_some_function_to_delete_item( $item );
-			// 	if ( $deleted ) {
-			// 		return new WP_REST_Response( true, 200 );
-			// }
-			// }
-
 			$post_id      = $request->get_param( 'ID' );
 			// $force_delete = $request->get_param( 'force' );
 
@@ -485,7 +384,7 @@ if ( ! class_exists( 'Event_API' ) ) {
 		 * Check if a given request has access to get a specific item
 		 *
 		 * @param WP_REST_Request $request Full data about the request.
-		 * @return WP_Error|bool
+		 * @return bool Return whether the current user has the specified capability.
 		 */
 		public function get_item_permissions_check( $request ) {
 			return $this->get_items_permissions_check( $request );
@@ -495,32 +394,32 @@ if ( ! class_exists( 'Event_API' ) ) {
 		 * Check if a given request has access to create items
 		 *
 		 * @param WP_REST_Request $request Full data about the request.
-		 * @return WP_Error|bool
+		 * @return bool Return whether the current user has the specified capability.
 		 */
 		public function create_item_permissions_check( $request ) {
 			return current_user_can( 'manage_options' );
 		}
-	
+
 		/**
 		 * Check if a given request has access to update a specific item
 		 *
 		 * @param WP_REST_Request $request Full data about the request.
-		 * @return WP_Error|bool
+		 * @return bool Return whether the current user has the specified capability.
 		 */
 		public function update_item_permissions_check( $request ) {
 			return $this->create_item_permissions_check( $request );
 		}
-	
+
 		/**
 		 * Check if a given request has access to delete a specific item
 		 *
 		 * @param WP_REST_Request $request Full data about the request.
-		 * @return WP_Error|bool
+		 * @return bool Return whether the current user has the specified capability.
 		 */
 		public function delete_item_permissions_check( $request ) {
 			return $this->create_item_permissions_check( $request );
 		}
-	
+
 		/**
 		 * Prepare the item for create or update operation
 		 *
@@ -530,7 +429,7 @@ if ( ! class_exists( 'Event_API' ) ) {
 		protected function prepare_item_for_database( $request ) {
 			return array();
 		}
-	
+
 		/**
 		 * Prepare the item for the REST response
 		 *
@@ -541,7 +440,7 @@ if ( ! class_exists( 'Event_API' ) ) {
 		public function prepare_item_for_response( $item, $request ) {
 			return array();
 		}
-	
+
 		/**
 		 * Get the query params for collections
 		 *
@@ -568,38 +467,6 @@ if ( ! class_exists( 'Event_API' ) ) {
 			),
 			);
 		}
-
-		/**
-		 * This function authenticates the request using Application Password generated on the Edit User page.
-		 *
-		 * @param WP_Error|null|true $error WP_Error if authentication error, null if authentication method wasn't used, true if authentication succeeded.
-		 */
-		// public function authenticate_api_request( $error ) {
-		// 	// If the request has already been authenticated.
-		// 	if ( is_wp_error( $error ) ) {
-		// 		return $error;
-		// 	}
-
-		// 	// Bail if rest_route isn't defined (shouldn't happen!).
-		// 	if ( empty( $GLOBALS['wp']->query_vars['rest_route'] ) ) {
-		// 		return $error;
-		// 	}
-
-		// 	$route = ltrim( $GLOBALS['wp']->query_vars['rest_route'], '/' );
-
-		// 	// Ensure we're dealing with our REST request only.
-		// 	if ( strpos( $route, 'storeapps/v1/events' ) !== 0 ) {
-		// 		return $error;
-		// 	}
-
-		// 	// error_log('shvsh current user up wp_validate_application_password > '.var_export(wp_validate_application_password( false ), true) );
-
-		// 	if ( false === wp_validate_application_password( false ) ) {
-		// 		return new WP_Error( 'rest_forbidden', __( 'Sorry, you are not allowed to do that.', 'storeapps-event' ), array( 'status' => 401 ) );
-		// 	}
-
-		// 	return $error;
-		// }
 	}
 }
 
