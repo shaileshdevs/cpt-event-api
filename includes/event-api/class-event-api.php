@@ -32,6 +32,7 @@ if ( ! class_exists( 'Event_API' ) ) {
 		 * Register the routes for the objects of the controller.
 		 */
 		public function register_routes() {
+			// To get the Event by Event ID.
 			register_rest_route(
 				$this->namespace,
 				'/' . $this->route_base . '/show',
@@ -43,18 +44,15 @@ if ( ! class_exists( 'Event_API' ) ) {
 						'args'                => array(
 							'id' => array(
 								'required'          => true,
-								'validate_callback' => function( $param ) {
-									return is_numeric( $param );
-								},
-								'sanitize_callback' => function( $param ) {
-									return intval( $param );
-								},
+								'validate_callback' => array( $this, 'validate_number' ),
+								'sanitize_callback' => array( $this, 'sanitize_number' ),
 							),
 						),
 					),
 				),
 			);
 
+			// To get the Events by start date.
 			register_rest_route(
 				$this->namespace,
 				'/' . $this->route_base . '/list',
@@ -66,20 +64,15 @@ if ( ! class_exists( 'Event_API' ) ) {
 						'args'                => array(
 							'start_date' => array(
 								'required'          => true,
-								// 'validate_callback' => function( $param ) {
-								// 	$format = 'dd/mm/yyyy';
-								// 	$d = \DateTime::createFromFormat( $format, $param );
-								// 	return $d && $d->format( $format ) === $param;
-								// },
-								'sanitize_callback' => function( $param ) {
-									return sanitize_text_field( $param );
-								},
+								'validate_callback' => array( $this, 'validate_date' ),
+								'sanitize_callback' => array( $this, 'sanitize_string' ),
 							),
 						),
 					),
 				),
 			);
 
+			// To create Event.
 			register_rest_route(
 				$this->namespace,
 				'/' . $this->route_base . '/create',
@@ -87,10 +80,35 @@ if ( ! class_exists( 'Event_API' ) ) {
 					'methods'             => \WP_REST_Server::CREATABLE,
 					'callback'            => array( $this, 'create_item' ),
 					'permission_callback' => array( $this, 'create_item_permissions_check' ),
-					'args'                => $this->get_endpoint_args_for_item_schema( true ),
+					'args'                => array(
+						'title'           => array(
+							'required'          => false,
+							'sanitize_callback' => array( $this, 'sanitize_string' ),
+						),
+						'start_date_time' => array(
+							'required'          => true,
+							'validate_callback' => array( $this, 'validate_date_time' ),
+							'sanitize_callback' => array( $this, 'sanitize_string' ),
+						),
+						'end_date_time'   => array(
+							'required'          => true,
+							'validate_callback' => array( $this, 'validate_date_time' ),
+							'sanitize_callback' => array( $this, 'sanitize_string' ),
+						),
+						'description'     => array(
+							'required'          => false,
+							'default'           => '',
+							'sanitize_callback' => array( $this, 'sanitize_description' ),
+						),
+						'title'           => array(
+							'category_slugs'    => false,
+							'sanitize_callback' => array( $this, 'sanitize_string' ),
+						),
+					),
 				),
 			);
 
+			// To update Event.
 			register_rest_route(
 				$this->namespace,
 				'/' . $this->route_base . '/update',
@@ -98,10 +116,39 @@ if ( ! class_exists( 'Event_API' ) ) {
 					'methods'             => \WP_REST_Server::EDITABLE,
 					'callback'            => array( $this, 'update_item' ),
 					'permission_callback' => array( $this, 'update_item_permissions_check' ),
-					'args'                => $this->get_endpoint_args_for_item_schema( false ),
+					'args'                => array(
+						'id'              => array(
+							'required'          => true,
+							'validate_callback' => array( $this, 'validate_number' ),
+							'sanitize_callback' => array( $this, 'sanitize_number' ),
+						),
+						'title'           => array(
+							'required'          => false,
+							'sanitize_callback' => array( $this, 'sanitize_string' ),
+						),
+						'start_date_time' => array(
+							'required'          => false,
+							'validate_callback' => array( $this, 'validate_date_time' ),
+							'sanitize_callback' => array( $this, 'sanitize_string' ),
+						),
+						'end_date_time'   => array(
+							'required'          => false,
+							'validate_callback' => array( $this, 'validate_date_time' ),
+							'sanitize_callback' => array( $this, 'sanitize_string' ),
+						),
+						'description'     => array(
+							'required'          => false,
+							'sanitize_callback' => array( $this, 'sanitize_description' ),
+						),
+						'title'           => array(
+							'category_slugs'    => false,
+							'sanitize_callback' => array( $this, 'sanitize_string' ),
+						),
+					),
 				),
 			);
 
+			// To delete Event by Event ID.
 			register_rest_route(
 				$this->namespace,
 				'/' . $this->route_base . '/delete',
@@ -109,23 +156,15 @@ if ( ! class_exists( 'Event_API' ) ) {
 					'methods'             => \WP_REST_Server::DELETABLE,
 					'callback'            => array( $this, 'delete_item' ),
 					'permission_callback' => array( $this, 'delete_item_permissions_check' ),
-					// 'args'                => array(
-					// 	'force' => array(
-					// 		'default' => false,
-					// 	),
-					// ),
-					// 'args'                => $this->get_endpoint_args_for_item_schema( false ),
+					'args'                => array(
+						'id' => array(
+							'required'          => true,
+							'validate_callback' => array( $this, 'validate_number' ),
+							'sanitize_callback' => array( $this, 'sanitize_number' ),
+						),
+					),
 				),
 			);
-
-			// register_rest_route(
-			// 	$this->namespace,
-			// 	'/' . $this->route_base . '/schema',
-			// 	array(
-			// 		'methods'  => WP_REST_Server::READABLE,
-			// 		'callback' => array( $this, 'get_public_item_schema' ),
-			// 	)
-			// );
 		}
 
 		/**
@@ -215,8 +254,10 @@ if ( ! class_exists( 'Event_API' ) ) {
 					);
 					$categories      = array();
 
-					foreach ( $terms as $term ) {
-						$categories[] = $term->slug;
+					if ( is_array( $terms ) ) {
+						foreach ( $terms as $term ) {
+							$categories[] = $term->slug;
+						}
 					}
 
 					$event_posts_data[] = array(
@@ -255,7 +296,7 @@ if ( ! class_exists( 'Event_API' ) ) {
 			$title           = $request->get_param( 'title' );
 			$start_date_time = $request->get_param( 'start_date_time' );
 			$end_date_time   = $request->get_param( 'end_date_time' );
-			$description     = empty( $request->get_param( 'description' ) ) ? '' : $request->get_param( 'description' );
+			$description     = $request->get_param( 'description' );
 			$category_slugs  = $request->get_param( 'category_slugs' ); // Category slugs should be comma separated list of category slugs.
 
 			$postarr = array(
@@ -302,7 +343,7 @@ if ( ! class_exists( 'Event_API' ) ) {
 			}
 
 			if ( $request->has_param( 'description' ) ) {
-				$postarr['description'] = $request->get_param( 'description' );
+				$postarr['post_content'] = $request->get_param( 'description' );
 			}
 
 			if ( $request->has_param( 'start_date_time' ) ) {
@@ -320,7 +361,7 @@ if ( ! class_exists( 'Event_API' ) ) {
 			if ( empty( $postarr ) ) {
 				return new \WP_Error( 'too_few_arguments', __( 'You must provide atleast one data to be updated in the Event.', 'storeapps-event' ), array( 'status' => 500 ) );
 			} else {
-				$postarr['ID']        = $request->get_param( 'ID' );
+				$postarr['ID']        = $request->get_param( 'id' );
 				$postarr['post_type'] = 'event';
 
 				// Update if post id exists, create post otherwise.
@@ -350,12 +391,12 @@ if ( ! class_exists( 'Event_API' ) ) {
 		 * @return WP_Error|WP_REST_Response Return WP_Rest_Response on success, WP_Error otherwise.
 		 */
 		public function delete_item( $request ) {
-			$post_id      = $request->get_param( 'ID' );
-			// $force_delete = $request->get_param( 'force' );
+			$post_id = $request->get_param( 'id' );
+			if ( false === get_post_status( $post_id ) ) {
+				return new \WP_Error( 'invalid_event_id', __( 'The Event doesn\'t exist with this ID.', 'storeapps-event' ), array( 'status' => 500 ) );
+			}
 
-			// $result = wp_delete_post( $post_id, $force_delete );
 			$result = wp_delete_post( $post_id );
-
 
 			if ( empty( $result ) ) {
 				return new \WP_Error( 'cant_delete', __( 'There is error while deleting the event.', 'storeapps-event' ), array( 'status' => 500 ) );
@@ -371,23 +412,13 @@ if ( ! class_exists( 'Event_API' ) ) {
 		}
 
 		/**
-		 * Check if a given request has access to get items
-		 *
-		 * @param WP_REST_Request $request Full data about the request.
-		 * @return bool Return whether the current user has the specified capability.
-		 */
-		public function get_items_permissions_check( $request ) {
-			return current_user_can( 'manage_options' );
-		}
-
-		/**
 		 * Check if a given request has access to get a specific item
 		 *
 		 * @param WP_REST_Request $request Full data about the request.
 		 * @return bool Return whether the current user has the specified capability.
 		 */
 		public function get_item_permissions_check( $request ) {
-			return $this->get_items_permissions_check( $request );
+			return current_user_can( 'manage_options' );
 		}
 
 		/**
@@ -421,51 +452,71 @@ if ( ! class_exists( 'Event_API' ) ) {
 		}
 
 		/**
-		 * Prepare the item for create or update operation
+		 * Validate number.
 		 *
-		 * @param WP_REST_Request $request Request object
-		 * @return WP_Error|object $prepared_item
+		 * @param string $param The data in API request.
+		 * @return bool Return true if number is valid, false otherwise.
 		 */
-		protected function prepare_item_for_database( $request ) {
-			return array();
+		public function validate_number( $param ) {
+			return is_numeric( $param );
 		}
 
 		/**
-		 * Prepare the item for the REST response
+		 * Validate date time.
+		 * The valid format for start date time and end date time is d/m/Y H:i.
+		 * Visit the site https://www.php.net/manual/en/datetime.format.php for details on the format.
 		 *
-		 * @param mixed $item WordPress representation of the item.
-		 * @param WP_REST_Request $request Request object.
-		 * @return mixed
+		 * @param string $param The data in API request.
+		 * @return bool Return true if date time is valid, false otherwise.
 		 */
-		public function prepare_item_for_response( $item, $request ) {
-			return array();
+		public function validate_date_time( $param ) {
+			$format = 'd/m/Y H:i';
+			$d      = \DateTime::createFromFormat( $format, $param );
+			return $d && $d->format( $format ) === $param;
 		}
 
 		/**
-		 * Get the query params for collections
+		 * Validate date for /storeapps/v1/events/list API request.
+		 * The valid format for the date is d/m/Y.
+		 * Visit the site https://www.php.net/manual/en/datetime.format.php for details on the format.
 		 *
-		 * @return array
+		 * @param string $param The data in API request.
+		 * @return bool Return true if date time is valid, false otherwise.
 		 */
-		public function get_collection_params() {
-			return array(
-			'page'     => array(
-				'description'       => 'Current page of the collection.',
-				'type'              => 'integer',
-				'default'           => 1,
-				'sanitize_callback' => 'absint',
-			),
-			'per_page' => array(
-				'description'       => 'Maximum number of items to be returned in result set.',
-				'type'              => 'integer',
-				'default'           => 10,
-				'sanitize_callback' => 'absint',
-			),
-			'search'   => array(
-				'description'       => 'Limit results to those matching a string.',
-				'type'              => 'string',
-				'sanitize_callback' => 'sanitize_text_field',
-			),
-			);
+		public function validate_date( $param ) {
+			$format = 'd/m/Y';
+			$d      = \DateTime::createFromFormat( $format, $param );
+			return $d && $d->format( $format ) === $param;
+		}
+
+		/**
+		 * Sanitize the data in API request.
+		 *
+		 * @param string $param The data in API request.
+		 * @return int Return the int value after sanitization.
+		 */
+		public function sanitize_number( $param ) {
+			return absint( $param );
+		}
+
+		/**
+		 * Sanitize the data in API request.
+		 *
+		 * @param string $param The data in API request.
+		 * @return string Return the string after sanitization.
+		 */
+		public function sanitize_string( $param ) {
+			return sanitize_text_field( $param );
+		}
+
+		/**
+		 * Sanitize the descrition in API request.
+		 *
+		 * @param string $param The data in API request.
+		 * @return string Return the description after sanitization.
+		 */
+		public function sanitize_description( $param ) {
+			return sanitize_textarea_field( $param );
 		}
 	}
 }
