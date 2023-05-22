@@ -1,4 +1,10 @@
 <?php
+/**
+ * The file to register Event custom post type and taxonomy Category.
+ *
+ * @package StoreApps
+ */
+
 namespace StoreApps;
 
 if ( ! class_exists( 'Event_CPT_Registration' ) ) {
@@ -111,7 +117,6 @@ if ( ! class_exists( 'Event_CPT_Registration' ) ) {
 				'show_admin_column'     => true,
 				'update_count_callback' => '_update_post_term_count',
 				'query_var'             => true,
-				// 'rewrite'               => array( 'slug' => 'event_category' ),
 			);
 
 			register_taxonomy(

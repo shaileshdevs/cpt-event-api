@@ -1,4 +1,10 @@
 <?php
+/**
+ * The file to handle API requests.
+ *
+ * @package StoreApps
+ */
+
 namespace StoreApps;
 
 if ( ! class_exists( 'Event_API' ) ) {

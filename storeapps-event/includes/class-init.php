@@ -1,4 +1,10 @@
 <?php
+/**
+ * The file to initialize.
+ *
+ * @package StoreApps
+ */
+
 namespace StoreApps;
 
 if ( ! class_exists( 'Init' ) ) {
