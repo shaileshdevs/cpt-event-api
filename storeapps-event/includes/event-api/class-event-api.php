@@ -184,7 +184,7 @@ if ( ! class_exists( 'Event_API' ) ) {
 			$post_id  = $request->get_param( 'id' );
 			$post     = get_post( $post_id );
 
-			if ( $post instanceof \WP_Post && 'event' === $post->post_type ) {
+			if ( $post instanceof \WP_Post && 'event' === $post->post_type && 'publish' === $post->post_status ) {
 				$start_date_time = get_post_meta( $post->ID, 'start_date_time', true );
 				$end_date_time   = get_post_meta( $post->ID, 'end_date_time', true );
 				$terms           = get_the_terms(
@@ -338,7 +338,11 @@ if ( ! class_exists( 'Event_API' ) ) {
 		 */
 		public function update_item( $request ) {
 			$response = array();
-			$postarr  = array();
+			$post_id  = $request->get_param( 'id' );
+
+			if ( 'event' !== get_post_type( $post_id ) ) {
+				return new \WP_Error( 'invalid_event_id', __( 'The Event doesn\'t exist with this ID.', 'storeapps-event' ), array( 'status' => 500 ) );
+			}
 
 			if ( $request->has_param( 'title' ) ) {
 				$postarr['post_title'] = $request->get_param( 'title' );
@@ -363,7 +367,7 @@ if ( ! class_exists( 'Event_API' ) ) {
 			if ( empty( $postarr ) ) {
 				return new \WP_Error( 'too_few_arguments', __( 'You must provide atleast one data to be updated in the Event.', 'storeapps-event' ), array( 'status' => 500 ) );
 			} else {
-				$postarr['ID']        = $request->get_param( 'id' );
+				$postarr['ID']        = $post_id;
 				$postarr['post_type'] = 'event';
 
 				// Update post.
