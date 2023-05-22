@@ -386,7 +386,7 @@ if ( ! class_exists( 'Event_API' ) ) {
 		 */
 		public function delete_item( $request ) {
 			$post_id = $request->get_param( 'id' );
-			if ( false === get_post_status( $post_id ) ) {
+			if ( 'event' !== get_post_type( $post_id ) ) {
 				return new \WP_Error( 'invalid_event_id', __( 'The Event doesn\'t exist with this ID.', 'storeapps-event' ), array( 'status' => 500 ) );
 			}
 
