@@ -184,7 +184,7 @@ if ( ! class_exists( 'Event_API' ) ) {
 			$post_id  = $request->get_param( 'id' );
 			$post     = get_post( $post_id );
 
-			if ( $post instanceof WP_Post ) {
+			if ( $post instanceof \WP_Post && 'event' === $post->post_type ) {
 				$start_date_time = get_post_meta( $post->ID, 'start_date_time', true );
 				$end_date_time   = get_post_meta( $post->ID, 'end_date_time', true );
 				$terms           = get_the_terms(
@@ -193,8 +193,10 @@ if ( ! class_exists( 'Event_API' ) ) {
 				);
 				$categories      = array();
 
-				foreach ( $terms as $term ) {
-					$categories[] = $term->slug;
+				if ( is_array( $terms ) ) {
+					foreach ( $terms as $term ) {
+						$categories[] = $term->slug;
+					}
 				}
 
 				$event_posts_data = array(
