@@ -182,29 +182,29 @@ if ( ! class_exists( 'Event_API' ) ) {
 			);
 			$posts    = get_posts( $args );
 
-			if ( ! empty( $posts ) ) {
-				foreach ( $posts as $post ) {
-					$start_date_time = get_post_meta( $post->ID, 'start_date_time', true );
-					$end_date_time   = get_post_meta( $post->ID, 'end_date_time', true );
-					$terms           = get_the_terms(
-						$post->ID,
-						'event_category',
-					);
-					$categories      = array();
+			$post = get_post( $post_id );
 
-					foreach ( $terms as $term ) {
-						$categories[] = $term->slug;
-					}
+			if ( $post instanceof WP_Post ) {
+				$start_date_time = get_post_meta( $post->ID, 'start_date_time', true );
+				$end_date_time   = get_post_meta( $post->ID, 'end_date_time', true );
+				$terms           = get_the_terms(
+					$post->ID,
+					'event_category',
+				);
+				$categories      = array();
 
-					$event_posts_data[] = array(
-						'event_id'        => $post->ID,
-						'title'           => $post->post_title,
-						'description'     => $post->post_content,
-						'start_date_time' => $start_date_time,
-						'end_date_time'   => $end_date_time,
-						'category_slugs'  => implode( ', ', $categories ),
-					);
+				foreach ( $terms as $term ) {
+					$categories[] = $term->slug;
 				}
+
+				$event_posts_data = array(
+					'event_id'        => $post->ID,
+					'title'           => $post->post_title,
+					'description'     => $post->post_content,
+					'start_date_time' => $start_date_time,
+					'end_date_time'   => $end_date_time,
+					'category_slugs'  => implode( ', ', $categories ),
+				);
 
 				$response = array(
 					'status'  => 'Success',
@@ -519,6 +519,7 @@ if ( ! class_exists( 'Event_API' ) ) {
 			return sanitize_textarea_field( $param );
 		}
 	}
+
+	new Event_API();
 }
 
-new Event_API();

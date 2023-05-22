@@ -1,15 +1,15 @@
 <?php
 namespace StoreApps;
 
-if ( ! class_exists( 'Event_CPT_Init' ) ) {
+if ( ! class_exists( 'Event_CPT_Registration' ) ) {
 	/**
 	 * The class to register custom post type Event.
 	 */
-	class Event_CPT_Init {
+	class Event_CPT_Registration {
 		/**
 		 * Instance of the class.
 		 *
-		 * @var Event_CPT_Init
+		 * @var Event_CPT_Registration
 		 */
 		protected static $instance = null;
 
@@ -23,7 +23,7 @@ if ( ! class_exists( 'Event_CPT_Init' ) ) {
 		/**
 		 * Return the single instance of the class.
 		 *
-		 * @return Event_CPT_Init Return the singleton instance of the class.
+		 * @return Event_CPT_Registration Return the singleton instance of the class.
 		 */
 		public static function get_instance() {
 			if ( null === self::$instance ) {
@@ -122,5 +122,5 @@ if ( ! class_exists( 'Event_CPT_Init' ) ) {
 		}
 	}
 
-	Event_CPT_Init::get_instance();
+	Event_CPT_Registration::get_instance();
 }
