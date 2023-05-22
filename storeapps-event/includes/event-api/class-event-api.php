@@ -366,8 +366,8 @@ if ( ! class_exists( 'Event_API' ) ) {
 				$postarr['ID']        = $request->get_param( 'id' );
 				$postarr['post_type'] = 'event';
 
-				// Update if post id exists, create post otherwise.
-				$post_id = wp_insert_post(
+				// Update post.
+				$post_id = wp_update_post(
 					$postarr,
 					true
 				);
