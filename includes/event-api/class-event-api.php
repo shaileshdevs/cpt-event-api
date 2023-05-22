@@ -176,13 +176,7 @@ if ( ! class_exists( 'Event_API' ) ) {
 		public function get_item( $request ) {
 			$response = array();
 			$post_id  = $request->get_param( 'id' );
-			$args     = array(
-				'post_type' => 'event',
-				'post__in'  => array( $post_id ),
-			);
-			$posts    = get_posts( $args );
-
-			$post = get_post( $post_id );
+			$post     = get_post( $post_id );
 
 			if ( $post instanceof WP_Post ) {
 				$start_date_time = get_post_meta( $post->ID, 'start_date_time', true );
